@@ -19,9 +19,6 @@ from_address = "door.detector.111@gmail.com"
 to_address = sys.argv[1]
 
 # Name the pins that we are using
-GREEN = 14
-YELLOW = 15
-RED = 18
 DOOR_OUT = 20
 DOOR_IN = 21
 
@@ -30,9 +27,6 @@ GPIO.setwarnings(False)
 
 # Enable BCM numbering and set input/outputs
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(GREEN, GPIO.OUT)
-GPIO.setup(YELLOW, GPIO.OUT)
-GPIO.setup(RED, GPIO.OUT)
 GPIO.setup(DOOR_OUT, GPIO.OUT)
 GPIO.setup(DOOR_IN, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 
