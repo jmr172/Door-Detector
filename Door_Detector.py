@@ -5,8 +5,18 @@ Last Modified On:   01/06/2018
 Purpose:            To detect if a door is open and send an email alert
 '''
 
+import sys
 import RPi.GPIO as GPIO
 import time
+import smtplib
+
+if (len(sys.argv) != 2 or sys.argv[1] == "-h"):
+    print("Usage: python3 Door_Detector.py to_address@example.com")
+    sys.exit()
+
+# Set to and from addresses
+from_address = "door.detector.111@gmail.com"
+to_address = sys.argv[1]
 
 # Name the pins that we are using
 GREEN = 14
@@ -29,18 +39,36 @@ GPIO.setup(DOOR_IN, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 # DOOR_OUT should always be HIGH
 GPIO.output(DOOR_OUT, GPIO.HIGH)
 
-# DOOR_IN == 1 when door is closed
+# Construct message to send
+msg = "\r\n".join([
+  "From: %s" % from_address,
+  "To: %s" % to_address,
+  "Subject: DOOR ALERT",
+  "",
+  "Your door is open."
+  ])
+
+# 0 if alert hasn't been sent, 1 if alert has already been sent
+sent_email = 0
+
+# DOOR_IN == 0 when door is open
 while True:
-    if (GPIO.input(DOOR_IN) == 1):
-        GPIO.output(GREEN, GPIO.HIGH)
-        GPIO.output(YELLOW, GPIO.HIGH)
-        GPIO.output(RED, GPIO.HIGH)
-
+    if (GPIO.input(DOOR_IN) == 0):
+        # Amount of time for door to be open before alert is sent
+        # Default is 30 seconds
+        time.sleep(30)
+        if (GPIO.input(DOOR_IN) == 0):
+            if (sent_email != 1):
+                # Setup smtp server as gmail
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(from_address, "doordetector111")
+                server.sendmail(from_address, to_address, msg)
+                server.quit()
+                sent_email = 1
+                print("Email sent")
     else:
-        GPIO.output(GREEN, GPIO.LOW)
-        GPIO.output(YELLOW, GPIO.LOW)
-        GPIO.output(RED, GPIO.LOW)
-
+        sent_email = 0
     time.sleep(1)
 
 GPIO.cleanup()
